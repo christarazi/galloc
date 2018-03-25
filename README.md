@@ -22,6 +22,7 @@ $ go build && ./malloc
  - Add implementation for `free(3)`
  - Add implementation for `realloc(3)`
  - Add implementation for `calloc(3)`
+ - Allow for use in C using cgo
 
 ## License
 
