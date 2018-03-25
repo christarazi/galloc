@@ -17,7 +17,8 @@ type MemBlock struct {
 }
 
 const SYSBRK uintptr = 12
-const ALIGN uintptr = 64
+const ALIGN int = 64
+const BLOCKSIZE uintptr = unsafe.Sizeof(MemBlock{})
 
 var base *MemBlock
 
@@ -49,8 +50,8 @@ func extend(size int, prev *MemBlock) *MemBlock {
 
 	// Hack to get aligned memory blocks. Otherwise, Go will puke out something
 	// like this:
-	// fatal error: bulkBarrierPreWrite: unaligned arguments
-	aligned := aligned_size(size)
+	//   fatal error: bulkBarrierPreWrite: unaligned arguments
+	aligned := aligned_size(size + int(BLOCKSIZE))
 	for aligned%ALIGN != 0 {
 		aligned = aligned_size(aligned + 1)
 	}
