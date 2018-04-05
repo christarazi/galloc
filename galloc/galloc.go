@@ -1,9 +1,9 @@
 package galloc
 
 import (
-	"golang.org/x/sys/unix"
-	// "reflect"
 	"fmt"
+	"golang.org/x/sys/unix"
+	"reflect"
 	"syscall"
 	"unsafe"
 )
@@ -11,18 +11,18 @@ import (
 type MemBlock struct {
 	Freed bool
 	Size  int
-	Next  *MemBlock
 	Prev  *MemBlock
+	Next  *MemBlock
 	Data  unsafe.Pointer
 }
+
+var base *MemBlock
 
 const (
 	SYSBRK    uintptr = 12
 	ALIGN     int     = 64
-	BLOCKSIZE uintptr = unsafe.Sizeof(MemBlock{})
+	BLOCKSIZE uintptr = unsafe.Sizeof(*base)
 )
-
-var base *MemBlock
 
 func brk(size uintptr) (uintptr, syscall.Errno) {
 	r, _, err := unix.Syscall(SYSBRK, size, 0, 0)
