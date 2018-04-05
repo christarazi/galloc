@@ -16,9 +16,11 @@ type MemBlock struct {
 	Data  unsafe.Pointer
 }
 
-const SYSBRK uintptr = 12
-const ALIGN int = 64
-const BLOCKSIZE uintptr = unsafe.Sizeof(MemBlock{})
+const (
+	SYSBRK    uintptr = 12
+	ALIGN     int     = 64
+	BLOCKSIZE uintptr = unsafe.Sizeof(MemBlock{})
+)
 
 var base *MemBlock
 
