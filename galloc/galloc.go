@@ -3,7 +3,6 @@ package galloc
 import (
 	"fmt"
 	"golang.org/x/sys/unix"
-	"reflect"
 	"syscall"
 	"unsafe"
 )
@@ -68,8 +67,8 @@ func extend(size int, prev *MemBlock) *MemBlock {
 	block = (*MemBlock)(unsafe.Pointer(ptr))
 	block.Freed = false
 	block.Size = size
-	block.Next = nil
 	block.Prev = prev
+	block.Next = nil
 
 	// Do not forget to set the next block from the previous.
 	if prev != nil {
@@ -92,7 +91,6 @@ func Malloc(size int) unsafe.Pointer {
 
 	if base == nil {
 		block = extend(size, prev)
-		fmt.Println("first call to brk:", block)
 		base = block
 	} else {
 		prev = base
@@ -112,8 +110,34 @@ func Malloc(size int) unsafe.Pointer {
 	return unsafe.Pointer(&block.Data)
 }
 
-// TODO: CT
-// func Free(ptr unsafe.Pointer) {
-// 	b := (*MemBlock)(unsafe.Pointer(ptr))
-// 	b.Freed = true
-// }
+func Free(ptr unsafe.Pointer) {
+	b := uintptr(ptr) - (unsafe.Offsetof(base.Data) -
+		unsafe.Offsetof(base.Freed)) // Retrieve start of MemBlock.
+
+	// Mark block as freed.
+	block := (*MemBlock)(unsafe.Pointer(b))
+	block.Freed = true
+
+	// Check if it is the last (end) block (farthest to the right if you think
+	// of a linked list). If it is, make sure to destroy the any links to it,
+	// and call brk(2) to deallocate the memory back.
+	if block.Next == nil {
+		if block.Prev != nil {
+			block.Prev.Next = nil
+		}
+		block.Prev = nil
+
+		p, err := brk(b)
+		if err != 0 {
+			panic(err)
+		}
+
+		// Don't forget to set the base pointer to nil as well.
+		if block == base {
+			base = nil
+		}
+		block = nil
+
+		fmt.Printf("deallocated : 0x%x\n", p)
+	}
+}
